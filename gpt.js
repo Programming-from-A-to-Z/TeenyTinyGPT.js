@@ -113,12 +113,13 @@ class TinyGPT {
 
   nextCharacter(context, temperature) {
     return tf.tidy(() => {
-      // Turn the text into a tensor of character ids
-      let inputs = tf.tensor2d([context], undefined, 'int32');
+      // Turn the text into a tensor of character ids (a batch of 1)
+      let inputs = tf.tensor2d([context], [1, context.length], 'int32');
       // Get the scores for the next character at every position
       let logits = this.predict(inputs);
       // Only the last position's score matters!
-      let last = logits.slice([0, context.length - 1, 0], [1, 1, this.vocabSize]).flatten();
+      // logits is [1, length, vocabSize]: take snippet 0, then the last position
+      let last = logits.gather(0).gather(context.length - 1);
       // Turn the scores into probabilities.
       return tf.softmax(last.div(temperature)).dataSync();
     });
@@ -127,8 +128,8 @@ class TinyGPT {
   // A helper function to grab the attention weights
   attentionWeights(context) {
     return tf.tidy(() => {
-      // With this input
-      let inputs = tf.tensor2d([context], undefined, 'int32');
+      // With this input (a batch of 1)
+      let inputs = tf.tensor2d([context], [1, context.length], 'int32');
       // Call the attention function and pull out the weights
       let { weights } = this.attention(this.embed(inputs));
       // We just want the weights as a plain JS array
