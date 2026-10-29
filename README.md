@@ -1,4 +1,4 @@
-# TinyGPT
+# TeenyTinyGPT
 
 This sketch trains a teeny tiny GPT from scratch in your browser with TensorFlow.js.
 
